@@ -3,7 +3,7 @@
 /*------2. Header---------------------------------*/
 /*------  2.1 Basic-------------------------------*/
 /*------  2.2 Icon--------------------------------*/
-/*------  2.3 Hover-------------------------------*/
+/*------  2.3 Contact List------------------------*/
 /*------3. Content--------------------------------*/
 /*------	3.1 Primary Content-------------------*/
 /*------		3.1.1 Left Page-------------------*/
@@ -17,7 +17,8 @@
 /*------		    3.1.2.2 Todo List-------------*/
 /*------		    3.1.2.3 News Seciton----------*/
 /*------4. Footer---------------------------------*/
-/*------5. media----------------------------------*/
+/*------5. Modal----------------------------------*/
+/*------6. media----------------------------------*/
 
 
 
@@ -117,7 +118,6 @@ nav ul li:before {
 	left: -26%;
 }
 
-/*------  2.3 Hover------*/
 nav ul li:hover {
 	transform: scale(1.1);
 	box-shadow: 0 2px 12px -10px #777;
@@ -127,6 +127,15 @@ nav ul li:hover {
 nav ul li:hover:before {
 	left: 6%;
 	transition: .5s;
+}
+
+/*------  2.4 Contact List------------------------*/
+#contactHome {
+	margin-left: 10px;
+}
+
+#contactDetails {
+
 }
 
 /*------3. Content------*/
@@ -467,7 +476,13 @@ nav ul li:hover:before {
 }
 
 /*------		        3.1.1.4.1 MusicModal------*/
+#musicModal {
+	margin: 5px 35px;
+}
 
+#musicModal li {
+	margin-bottom: 5px;
+}
 
 
 /*------		3.1.2 Right Page------*/
@@ -479,7 +494,7 @@ nav ul li:hover:before {
 	margin-top: 20px;
 }
 
-#addTask {
+.addTask {
 	padding: 5px 10px;
 	background-color: orange;
 	border-radius: 5px;
@@ -636,7 +651,37 @@ nav ul li:hover:before {
 }
 
 /*------4. Footer------*/
-/*------5. media------*/
+
+
+/*------5. Modal----------------------------------*/
+#modalsContainer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: gray;
+	opacity: 0;
+	transition: 1s;
+	transform: scale(.01);
+}
+
+.modalContainer {
+	position: absolute;
+	top: 20%;
+	left: 30%;
+	width: 40%;
+	background-color: #E3E6A1;
+	opacity: 0;
+	box-shadow: 0 10px 6px -6px #777;
+	border-radius: 10px;
+	transition: 1s;
+	transform: scale(.01);
+}
+
+
+
+/*------6. media------*/
 @media screen and (max-width: 965px) {
 	#oneDate {
   		display: none;

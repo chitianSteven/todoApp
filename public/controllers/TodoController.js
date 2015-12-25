@@ -6,97 +6,148 @@ angular.module('myApp', ['ngRoute', 'ngResource', 'ngAnimate', 'ui.bootstrap', '
       });
     }])
 
-
-    .controller('TodoController', ['$scope', 'Todos', '$uibModal', '$log', function ($scope, Todos, $uibModal, $log) {
-    	//-----------1. Database binding functions-----------//
-    	//-----------2. Calendar functions-------------------//
-    	//-----------3. Music functions----------------------//
-    	//-----------4. Modal functions----------------------//
-    	//-----------	4.1. Part 1 for constroller in the---//
-    	//-----------	     main window---------------------//
-    	//-----------	4.2. Part 2 for constroller in the---//
-    	//-----------	     pop window (code is put under---//
-    	//-----------	     the Others part)----------------//
-    	//-----------5. Others-------------------------------//
+    .factory('ContactList', ['$resource', function($resource){
+      return $resource('/contactlist/:id', null, {
+        'update': { method:'PUT' }
+      });
+    }])
 
 
+    .controller('TodoController', ['$scope', 'Todos', 'ContactList', function ($scope, Todos, ContactList) {
+
+    	//-----------1. Variables setting--------------------//
+    	//-----------2. Database binding functions-----------//
+    	//-----------3. Calendar functions-------------------//
+    	//-----------4. Music functions----------------------//
+    	//-----------5. Modal functions----------------------//
+    	//-----------	5.1. Outside Container---------------//
+    	//-----------6. Contact list functions---------------//
+    	//-----------7. Others-------------------------------//
 
 
     	//---------------------------------------------------//
-    	//-----------1. Database binding functions-----------//
+    	//-----------1. Variables setting--------------------//
     	//---------------------------------------------------//
-	    $scope.save = function(){
-	    	var date = $scope.year+"-"+$scope.day+"-"+$scope.month+"T00:00:00.000Z";
-	        var todo = new Todos({ title: "test", priority: "normal", content: "This is a new task", complete: false, alarm: false, date: date });
-	        todo.$save(function(){
-	          $scope.todos.push(todo);
-	        });
-	    };
-
-	    $scope.update = function(todo){
-	        var todo = todo;
-	        Todos.update({id: todo._id}, todo);
-	    };
-
-	    $scope.delete = function(id){
-	        Todos.remove({id:id}, function (){})
-	        refresh();
-	    };
-
 		$scope.numPerPage = 5;
 		$scope.totalItems = 64;
 		$scope.currentPage = 1;
 		$scope.maxSize = 5;
 		$scope.totalPage = 1;
+		$scope.numPerPageContact = 5;
+		$scope.totalItemsContact = 64;
+		$scope.currentPageContact = 1;
+		$scope.maxSizeContact = 5;
+		$scope.totalPageContact = 1;
 	    //set the Date variables
 		var month_name = ['January','February', 'March', 'April', 'May', 'June', 'July', 'Augst', 'September', 'Octorber', 'Novmenber', 'December'];
 		var day_name = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+
+    	//---------------------------------------------------//
+    	//-----------2. Database binding functions-----------//
+    	//---------------------------------------------------//
+	    $scope.save = function(database){
+	    	if (database==="notelist") {
+		    	var date = $scope.year+"-"+$scope.day+"-"+$scope.month+"T00:00:00.000Z";
+		        var todo = new Todos({ title: "test", priority: "normal", content: "This is a new task", complete: false, alarm: false, date: date });
+		        todo.$save(function(){
+		        	$scope.todos.push(todo);
+		        });
+	        } else if (database==="contactlist") {
+				var contact = new ContactList({ name: "name", gendar: "male", phone: "0000000000", email: "someone@email.com", address: "address", note: "note" });
+		        contact.$save(function(){
+		        	$scope.contacts.push(contact);
+		        });
+	        }
+	    };
+
+	    $scope.update = function(database, data){
+	    	if (database==="notelist") {
+		        Todos.update({id: data._id}, data);
+	    	} else if (database==="contactlist") {
+		        ContactList.update({id: data._id}, data);
+	        }
+	    };
+
+	    $scope.delete = function(database, id){
+	    	if (database==="notelist") {
+		        Todos.remove({id:id}, function (){});
+			    refresh("notelist");
+	    	} else if (database==="contactlist") {
+	        	ContactList.remove({id:id}, function (){});
+			    refresh("contactlist");
+	        }
+	    };
+
 		$scope.$watch("currentPage+todos.length", function() {	
 			var begin = (($scope.currentPage - 1) * $scope.numPerPage),
 				  end = begin + $scope.numPerPage;
-			if ($scope.todos.length > 0) {
-				$scope.filteredTodosAll = [];
+
+			if ($scope.todos.length > 0 && $scope.totalPage>=$scope.currentPage-1) {
+				var filteredTodosAll = [];
 		    	var date = $scope.year+"-"+(month_name.indexOf($scope.month)+1)+"-"+$scope.day;
 				for (var i=0; i<$scope.todos.length; i=i+1) {
 					if ($scope.todos[i].date.slice(0,$scope.todos[i].date.indexOf("T"))==date) {
-						$scope.filteredTodosAll.push($scope.todos[i]);
+						filteredTodosAll.push($scope.todos[i]);
 					}
 				}
-				$scope.filteredTodos = $scope.filteredTodosAll.slice(begin, end);
-				$scope.totalPage = Math.floor(($scope.filteredTodosAll.length/$scope.numPerPage)-0.1)+1;
+				$scope.filteredTodos = filteredTodosAll.slice(begin, end);
+				$scope.totalPage = Math.floor((filteredTodosAll.length/$scope.numPerPage)-0.1)+1;
 			}
 		});
 
-		var refresh = function() {
-			$scope.todos = Todos.query();
-			var date;
-			for (var i=0; i<$scope.todos.length; i=i+1) {
-				if ($scope.todos[i].complete===false) {
-					date = $scope.todos[i].date.slice(0,$scope.todos[i].date.indexOf("T"));
-					date = date.split("-");
-
-				}
+		$scope.$watch("currentPageContact+contacts.length", function() {	
+			var begin = (($scope.currentPageContact - 1) * $scope.numPerPageContact),
+				  end = begin + $scope.numPerPageContact;
+			if ($scope.contacts.length > 0 && $scope.totalPageContact>=$scope.currentPageContact-1) {
+				$scope.filteredContacts = $scope.contacts.slice(begin, end);
+				$scope.totalPageContact = Math.floor(($scope.contacts.length/$scope.numPerPageContact)-0.1)+1;
 			}
+		});
+
+		var refresh = function(database) {
+	    	if (database==="notelist") {
+				$scope.todos = Todos.query();
+				if ($scope.todos.length===0) {
+					console.log($scope.totalPage);
+				} 	
+				// var date;
+				// for (var i=0; i<$scope.todos.length; i=i+1) {
+				// 	if ($scope.todos[i].complete===false) {
+				// 		date = $scope.todos[i].date.slice(0,$scope.todos[i].date.indexOf("T"));
+				// 		date = date.split("-");
+				// 	}
+				// }
+	    	} else if (database==="contactlist") {
+				$scope.contacts = ContactList.query(); 
+				if ($scope.contacts.length===0) {
+					$scope.totalPageContact=0;
+				} 	
+	        }
 		}
 
-		refresh();
+		refresh("notelist");
+		refresh("contactlist");
 
 
 		//Start editing the note details
-		$scope.edit = function(todo) {
-			$scope.thisTodo = todo;
-			var calendarSectionWidth = $(".leftPage .calendarSection").width();
-			//Change the left page for the note details
-			var styles1 = {
-				transform: "translateX(110%)"
-			};
-			var styles2 = {
-				transform: "translateX(0%)"
-			};
+		$scope.edit = function(database, todo) {
+	    	if (database==="notelist") {
+				$scope.thisTodo = todo;
+				var calendarSectionWidth = $(".leftPage .calendarSection").width();
+				//Change the left page for the note details
+				var styles1 = {
+					transform: "translateX(110%)"
+				};
+				var styles2 = {
+					transform: "translateX(0%)"
+				};
 
-			$(".leftPage .noteDetails").css(styles2);
-			$(".leftPage .calendarSection").css(styles1);
+				$(".leftPage .noteDetails").css(styles2);
+				$(".leftPage .calendarSection").css(styles1);
+	    	} else if (database==="contactlist") {
+
+			}		
 		}
 		
 		//Change the left page to the calendar page
@@ -115,7 +166,7 @@ angular.module('myApp', ['ngRoute', 'ngResource', 'ngAnimate', 'ui.bootstrap', '
 
 
     	//---------------------------------------------------//
-    	//-----------2. Calendar functions-------------------//
+    	//-----------3. Calendar functions-------------------//
     	//---------------------------------------------------//
 		var getCalenderDays = function(date) {
 			var first_date = date.month+" "+1+" "+date.year;
@@ -227,7 +278,7 @@ angular.module('myApp', ['ngRoute', 'ngResource', 'ngAnimate', 'ui.bootstrap', '
 				$("#Day").text(dateNo);
 			}
 			$scope.day = dateNo;
-			refresh();
+			refresh("notelist");
 		});
 
 		//Change the date color
@@ -275,7 +326,7 @@ angular.module('myApp', ['ngRoute', 'ngResource', 'ngAnimate', 'ui.bootstrap', '
 		});
 
     	//---------------------------------------------------//
-    	//-----------3. Music functions----------------------//
+    	//-----------4. Music functions----------------------//
     	//---------------------------------------------------//
     	 $scope.songs = [
             {
@@ -285,69 +336,82 @@ angular.module('myApp', ['ngRoute', 'ngResource', 'ngAnimate', 'ui.bootstrap', '
                 url: 'music/song1.mp3'
             },
             {
-                id: 'one',
-                title: "What Doesn't Kill You (Stronger)",
+                id: 'two',
+                title: "Stronger",
                 artist: 'Kelly Clarkson',
                 url: 'music/song2.mp3'
             }
         ];
 
 
+    	//---------------------------------------------------//
+    	//-----------5. Modal functions----------------------//
+    	//-----------	5.1. Outside Container---------------//
+    	//---------------------------------------------------//
+    	var styleModalShow = {
+    		"opacity" : "1",
+			"transform": "scale(1)",
+    	},
+    		styleModalHide = {
+    		"opacity" : "0",
+			"transform": "scale(.01)",
+    	};
+
+    	var styleModalsContainerShow = {
+    		"opacity" : ".7",
+			"transform": "scale(1)",
+    	},
+    		styleModalsContainerHide = {
+    		"opacity" : "0",
+			"transform": "scale(.01)",
+    	};
+
+		$("#modalsContainer").on("click",function(e) {
+			$("#modalsContainer").css(styleModalsContainerHide);
+			$("#musicModalContainer").css(styleModalHide);
+			$("#contactHomeModalContainer").css(styleModalHide);
+		})
+
+		$("#contactList").on("click",function(e) {
+        	$("#modalsContainer").css(styleModalsContainerShow);
+			$("#contactHomeModalContainer").css(styleModalShow);
+		})
+
+		$("#contactList").on("click",function(e) {
+        	$("#modalsContainer").css(styleModalsContainerShow);
+			$("#contactHomeModalContainer").css(styleModalShow);
+		})
+
+		$("#featherMusic").on("click",function(e) {
+        	$("#modalsContainer").css(styleModalsContainerShow);
+			$("#musicModalContainer").css(styleModalShow);
+        })
+
+
+    	//---------------------------------------------------//
+    	//-----------6. Contact list functions---------------//
+    	//---------------------------------------------------//
+
+
 
 
 
     	//---------------------------------------------------//
-    	//-----------4. Modal functions----------------------//
-    	//-----------	4.1. Part 1 for constroller in the---//
-    	//-----------	     main window---------------------//
+    	//-----------7. Others-------------------------------//
     	//---------------------------------------------------//
-		$scope.animationsEnabled = true;
-		$scope.items = ['item1', 'item2', 'item3'];
-
-		$scope.featherOpen = function (size) {
-		    var modalInstance = $uibModal.open({
-		        animation: $scope.animationsEnabled,
-		        templateUrl: 'myModalContent.html',
-		        controller: 'TodoController',
-		        size: size,
-		        resolve: {
-		        	items: function () {
-		            	return $scope.items;
-		            }
-		        }
-		    });
-
-		    modalInstance.result.then(function (selectedItem) {
-		        $scope.selected = selectedItem;
-		    }, function () {
-		        $log.info('Modal dismissed at: ' + new Date());
-		    });
-		};
-    	//---------------------------------------------------//
-    	//-----------5. Others-------------------------------//
-    	//---------------------------------------------------//
+    	var genNumberArray = function(start, end, gap) {
+    			var array = [];
+    		for (var i = start; i<=end; i=i+gap) {
+    			array.push(i);
+    		}
+    		return array;
+    	}
+    	$scope.alarmDays = genNumberArray(0, 30, 1);
+    	$scope.alarmHours = genNumberArray(0, 24, 1);
+    	$scope.alarmMinites = genNumberArray(0, 60, 5);
 
     }])
-    	//---------------------------------------------------//
-    	//-----------4. Modal functions----------------------//
-    	//-----------	4.2. Part 2 for constroller in the---//
-    	//-----------	     pop window----------------------//
-    	//---------------------------------------------------//
-angular.module('myApp').controller('ModalInstanceCtrl', function ($scope, $uibModalInstance, items) {
 
-		$scope.items = ['item1', 'item2', 'item3'];
-	$scope.selected = {
-		item: $scope.items[0]
-	};
-
-	$scope.ok = function () {
-		$uibModalInstance.close($scope.selected.item);
-	};
-
-	$scope.cancel = function () {
-		$uibModalInstance.dismiss('cancel');
-	};
-});
 
 //Set the news sliders
 $('.variable-width').slick({

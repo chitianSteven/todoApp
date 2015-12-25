@@ -16,6 +16,7 @@ mongoose.connect('mongodb://localhost/notelist', function(err) {
 
 var routes = require('./routes/index');
 var todos = require('./routes/todos');
+var contactlist = require('./routes/contactlist');
 
 var app = express();
 
@@ -33,6 +34,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/todos',todos);
+app.use('/contactlist',contactlist);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
